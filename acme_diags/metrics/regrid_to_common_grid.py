@@ -1,4 +1,4 @@
-from metrics.computation.reductions import  allAxes, reconcile_units
+from acme_diags.metrics.reductions import  allAxes, reconcile_units
 import logging
 logger = logging.getLogger(__name__)
 def regrid_to_common_grid(mv1, mv2, axes1=None, axes2=None, regridMethod='linear', regridTool='esmf'):

@@ -1,19 +1,20 @@
-import sys, logging, cdms2, MV2, numpy, pdb
+import MV2
+import cdms2
+import logging
+import numpy
 
-from acme_diags.metrics.vertical import verticalize
-from acme_diags.metrics.reductions import select_lev, reduce2scalar_seasonal_zonal, reduce2any, convert_units, reconcile_units
-from acme_diags.metrics.default_levels import default_levels
-from acme_diags.metrics.units import convert_variable
-from acme_diags.metrics.compute_rmse import compute_rmse
-from acme_diags.metrics.simple_vars import mask_by
 from unidata import udunits
 
-from table_parameter import *
+from acme_diags.metrics.compute_rmse import compute_rmse
+from acme_diags.metrics.reductions import select_lev, reduce2scalar_seasonal_zonal, convert_units, reconcile_units
+from acme_diags.metrics.regrid_to_common_grid import regrid_to_common_grid
+from acme_diags.metrics.units import convert_variable
+from acme_diags.metrics.vertical import verticalize
 from defines import all_regions
-from table_row_spec import table_row_specs
 from findfile import findfile
-from regrid_to_common_grid import regrid_to_common_grid
 from process_derived_variable import process_derived_variable
+from table_parameter import *
+from table_row_spec import table_row_specs
 
 logger_fmt = "%(levelname)s: %(message)s"
 logging.basicConfig(level=logging.ERROR, filename=None, format=logger_fmt)
