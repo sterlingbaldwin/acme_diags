@@ -71,7 +71,7 @@ def regrid_to_common_grid(mv1, mv2, axes1=None, axes2=None, regridMethod='linear
             mv2new = mv2.regrid(grid1, regridTool=regridTool)
         else:
             mv2new = mv2.regrid(grid1, regridTool=regridTool, regridMethod=regridMethod)
-        mv2new.mean = None
+        #mv2new.mean = None
         mv2.regridded = mv2new.id  # a GUI can use this
         if hasattr(mv1, 'gw'):
             mv2new.gw = mv1.gw
@@ -92,7 +92,7 @@ def regrid_to_common_grid(mv1, mv2, axes1=None, axes2=None, regridMethod='linear
             mv1new = mv1.regrid(grid2, regridTool=regridTool)
         else:
             mv1new = mv1.regrid(grid2, regridTool=regridTool, regridMethod=regridMethod)
-        mv1new.mean = None
+        #mv1new.mean = None
 
         mv1.regridded = mv1new.id  # a GUI can use this
         if hasattr(mv2, 'gw'):

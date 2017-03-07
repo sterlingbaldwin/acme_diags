@@ -72,6 +72,8 @@ region_categories = {
 'Hemispheric and Global': ['Global Land', 'Northern Hemisphere Land', 'Southern Hemisphere Land']
 }
 
+Hemispheres = { "Northern Hemisphere":(90, 0.), "Southern Hemisphere":(-90.,0) }
+
 #station ids used in plot set 12
 station_names = ["Ascension_Island","Diego_Garcia","Truk_Island", 
                 "Western_Europe","Ethiopia","Resolute_Canada","Western_Desert_Australia", 
