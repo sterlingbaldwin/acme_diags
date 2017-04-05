@@ -5,11 +5,20 @@ import acme_diags.acme_parameter
 
 class ACMEParser(cdp.cdp_parser.CDPParser):
     def __init__(self, *args, **kwargs):
-        super(ACMEParser, self).__init__(acme_diags.acme_parameter.ACMEParameter, *args, **kwargs)
+        super(ACMEParser, self).__init__(
+            acme_diags.acme_parameter.ACMEParameter, *args, **kwargs)
 
     def load_default_args(self):
         # this has '-p' and '--parameter' reserved
         super(ACMEParser, self).load_default_args()
+
+        self.add_argument(
+            '-d',
+            type=str,
+            dest='custom_diags',
+            help='Path to a json that contains a list of custom diags, which' +
+            ' get appended to the default diags.',
+            required=False)
 
         self.add_argument(
             '-r', '--reference_data_set',
@@ -140,4 +149,10 @@ class ACMEParser(cdp.cdp_parser.CDPParser):
             '--diff_colormap',
             dest='diff_colormap',
             help='Colormap for the bottom graph',
+            required=False)
+
+        self.add_argument(
+            '--backend',
+            dest='backend',
+            help='Graphic backend',
             required=False)

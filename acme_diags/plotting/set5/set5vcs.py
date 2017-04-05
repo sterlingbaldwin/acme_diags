@@ -1,18 +1,23 @@
 import os
+import sys
 import numpy
 import cdutil
 import vcs
+import cdms2
 import genutil.statistics
 from acme_diags.metrics import rmse, corr, min_cdms, max_cdms, mean
 
 
-def plot_min_max_mean(canvas, variable, ref_test_or_diff):
-    """canvas is a vcs.Canvas, variable is a
-    cdms2.tvariable.TransientVariable and ref_test_or_diff is a string"""
-    var_min = '%.2f' % min_cdms(variable)
-    var_max = '%.2f' % max_cdms(variable)
-    var_mean = '%.2f' % mean(variable)
+def plot_min_max_mean(canvas, metrics_dict, ref_test_or_diff):
+    """ canvas is a vcs.Canvas, metrics_dict is a dict and 
+    ref_test_or_diff is a string """
+    var_min = '%.2f' % metrics_dict[ref_test_or_diff]['min']
+    var_max = '%.2f' % metrics_dict[ref_test_or_diff]['max']
+    var_mean = '%.2f' % metrics_dict[ref_test_or_diff]['mean']
 
+    if ref_test_or_diff == 'ref':  # Remove this when vcdat is done
+        ref_test_or_diff = 'reference'
+ 
     # can be either 'reference', 'test' or 'diff'
     plot = ref_test_or_diff
     min_label = canvas.createtextcombined(Tt_source = plot + '_min_label',
@@ -39,12 +44,11 @@ def plot_min_max_mean(canvas, variable, ref_test_or_diff):
     canvas.plot(mean_value)
     canvas.plot(mean_label)
 
-def plot_rmse_and_corr(canvas, model, obs):
-    """canvas is a vcs.Canvas, model and obs are
-    a cdms2.tvariable.TransientVariable"""
+def plot_rmse_and_corr(canvas, metrics_dict):
+    """ canvas is a vcs.Canvas, metrics_dict is a dict """
 
-    rmse_str = '%.2f' % rmse(obs, model)
-    corr_str = '%.2f' % corr(obs, model)
+    rmse_str = '%.2f' % metrics_dict['misc']['rmse']
+    corr_str = '%.2f' % metrics_dict['misc']['corr']
 
     rmse_label = canvas.createtextcombined(Tt_source = 'diff_plot_comment1_title',
                                            To_source = 'diff_plot_comment1_title')
@@ -83,9 +87,12 @@ def set_units(ref_or_test, units):
     if units != '':
         ref_or_test.units = units
 
-def plot(reference, test, reference_regrid, test_regrid, parameter):
+def add_cyclic(var):
+    lon = var.getLongitude()
+    return var(longitude=(lon[0],lon[0]+360.0,'coe'))
 
-    diff = test_regrid - reference_regrid
+def plot(reference, test, diff, metrics_dict, parameter):
+
     case_id = parameter.case_id
     if not os.path.exists(case_id):
         os.makedirs(case_id)
@@ -95,8 +102,10 @@ def plot(reference, test, reference_regrid, test_regrid, parameter):
     if not parameter.logo:
         vcs_canvas.drawlogooff()
 
-    vcs_canvas.scriptrun('plot_set_5.json')
-    vcs_canvas.scriptrun('plot_set_5_new.json')
+    file_path = os.path.join(sys.prefix, 'share', 'acme_diags', 'set5')
+    vcs_canvas.scriptrun(os.path.join(file_path, 'plot_set_5.json'))
+    vcs_canvas.scriptrun(os.path.join(file_path, 'plot_set_5_new.json'))
+    
     template_test = vcs_canvas.gettemplate('plotset5_0_x_0')
     template_ref = vcs_canvas.gettemplate('plotset5_0_x_1')
     template_diff = vcs_canvas.gettemplate('plotset5_0_x_2')
@@ -114,16 +123,20 @@ def plot(reference, test, reference_regrid, test_regrid, parameter):
     diff.id = parameter.diff_name
 
     # model and observation graph
-    plot_min_max_mean(vcs_canvas, test, 'test')
-    plot_min_max_mean(vcs_canvas, reference, 'reference')
-    plot_min_max_mean(vcs_canvas, diff, 'diff')
+    plot_min_max_mean(vcs_canvas, metrics_dict, 'test')
+    plot_min_max_mean(vcs_canvas, metrics_dict, 'ref')
+    plot_min_max_mean(vcs_canvas, metrics_dict, 'diff')
 
     reference_isofill = vcs.getisofill('reference_isofill')
+    reference_isofill.missing = 'grey'
     test_isofill = vcs.getisofill('test_isofill')
+    test_isofill.missing = 'grey'
     diff_isofill = vcs.getisofill('diff_isofill')
+    diff_isofill.missing = 'grey'
 
-    set_levels_of_graphics_method(reference_isofill, parameter.reference_levels, reference)
-    set_levels_of_graphics_method(test_isofill, parameter.test_levels, test)
+
+    set_levels_of_graphics_method(reference_isofill, parameter.contour_levels, reference)
+    set_levels_of_graphics_method(test_isofill, parameter.contour_levels, test)
     set_levels_of_graphics_method(diff_isofill, parameter.diff_levels, diff)
 
     if parameter.arrows:
@@ -138,11 +151,11 @@ def plot(reference, test, reference_regrid, test_regrid, parameter):
     set_colormap_of_graphics_method(vcs_canvas, parameter.test_colormap, test_isofill)
     set_colormap_of_graphics_method(vcs_canvas, parameter.diff_colormap, diff_isofill)
 
-    vcs_canvas.plot(test, template_test, test_isofill)
-    vcs_canvas.plot(reference, template_ref, reference_isofill)
-    vcs_canvas.plot(diff, template_diff, diff_isofill)
+    vcs_canvas.plot(add_cyclic(test), template_test, test_isofill)
+    vcs_canvas.plot(add_cyclic(reference), template_ref, reference_isofill)
+    vcs_canvas.plot(add_cyclic(diff), template_diff, diff_isofill)
 
-    plot_rmse_and_corr(vcs_canvas, test_regrid, reference_regrid)
+    plot_rmse_and_corr(vcs_canvas, metrics_dict)
 
     # Plotting the main title
     main_title = vcs_canvas.createtextcombined(Tt_source = 'main_title',
@@ -150,6 +163,13 @@ def plot(reference, test, reference_regrid, test_regrid, parameter):
     main_title.string = parameter.main_title
     vcs_canvas.plot(main_title)
 
-    #vcs_canvas.pdf(case_id + '/' + parameter.output_file, textAsPaths=False)
-    vcs_canvas.png(case_id + '/' + parameter.output_file)
-    print 'Plot saved in: ' + case_id + '/' + parameter.output_file
+    for f in parameter.output_format:
+        f = f.lower().split('.')[-1]
+        if f == 'png':
+            vcs_canvas.png(case_id + '/' + parameter.output_file)
+        elif f == 'pdf':
+            vcs_canvas.pdf(case_id + '/' + parameter.output_file)
+        elif f == 'svg':
+            vcs_canvas.svg(case_id + '/' + parameter.output_file)
+
+        print('Plot saved in: ' + case_id + '/' + parameter.output_file + '.' + f)
