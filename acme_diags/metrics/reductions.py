@@ -2340,6 +2340,7 @@ def reconcile_units( mv1, mv2, preferred_units=None ):
     # better-defined.  I primarily wanted to ensure that it would
     # still work for the cases that the previous code worked for.
     #first check if they have an id
+
     if hasattr(mv1, 'id') and hasattr(mv2, 'id'):
         if mv1.id.find('_QFLX_')>=0 or mv1.id.find('_LHFLX_')>=0 or mv2.id.find('_QFLX_')>=0 \
                 or mv2.id.find('_LHFLX_')>=0 or (mv1.units=='kg/m2/s' and mv2.units=='mm/day'):

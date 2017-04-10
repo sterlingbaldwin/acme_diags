@@ -8,7 +8,7 @@
     #   units units of the output quantity (default is same as the input files)
 
 #this is a dummy table for testing
-#table_row_specs = [{ 'var':'SST', 'obs':'HadISST_CL', 'units': 'degC'},{ 'var':'SST', 'obs':'HadISST_PI', 'units': 'degC'}, { 'var':'SST', 'obs':'HadISST_PD', 'units': 'degC'}]
+#table_row_specs = [{ 'var':'Z3', 'obs':'NCEP', 'lev':'500', 'units':'hectometer'}]
 table_row_specs = [
     { 'var':'FLUT', 'obs':'CERES-EBAF'},
     { 'var':'FLUTC', 'obs':'CERES-EBAF'},

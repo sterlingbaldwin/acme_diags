@@ -4,8 +4,6 @@
 # import Ngl
 import numpy, cdms2, cdutil, pdb, logging
 from unidata import udunits
-from metrics.computation.reductions import set_mean
-
 
 logger = logging.getLogger(__name__)
 # constants as in functions_vertical.ncl, lines 5-10:
