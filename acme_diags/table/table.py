@@ -1,37 +1,15 @@
 import logging, cdms2, MV2, numpy, cdutil, pdb
 from numbers import Number
-from math import radians, log10
+from math import log10
 from unidata import udunits
 from acme_diags.metrics import rmse, corr, acme_averager
 from defines import all_regions
-from table_row_spec import table_row_specs
-
-from process_derived_variable import process_derived_variable
-
+from acme_diags.derivations import acme
 from table_parameter import *
+from table_row_spec import table_row_specs
 logger_fmt = "%(levelname)s: %(message)s"
 logging.basicConfig(level=logging.ERROR, filename=None, format=logger_fmt)
 logger = logging.getLogger(__name__)
-
-# constants as in functions_vertical.ncl, lines 5-10:
-plvlO = numpy.array([30.,50.,70.,100.,150.,200.,250.,300.,400.,500.,
-                     600.,700.,775.,850.,925.,1000.])   # mb
-nplvlO = 16
-
-undefined = -numpy.infty
-name = 'Tables of Global, tropical, and extratropical DJF, JJA, ANN means and RMSE'
-title = ' '.join(['AMWG Diagnostics Set 1', season, 'means', region]) + '\n'
-subtitles = [
-    ' '.join(['Test Case:', model_file]) + '\n',
-    'Control Case: various observational data\n',
-    'Variable                 Test Case           Obs          Test-Obs           RMSE           Correlation\n']
-
-#one reference to hybrid coordinates so they are read once
-first_model_data_read = True
-hybrid = False
-hyam = None
-hybm = None
-PS = None
 
 def findfile(directory, prefix, season):
     import os
@@ -420,29 +398,21 @@ def regrid_to_lower_res(mv1, mv2, regrid_tool, regrid_method):
                              regridMethod=regrid_method)
     return mv1_reg, mv2_reg
 
-def verticalize( T, hyam, hybm, ps, level_src=plvlO ):
+def verticalize( T, hyam, hybm, ps ):
     """
     For data T with CAM's hybrid level coordinates, interpolates to
     the more standard pressure level coordinates and returns the results.
     The input arguments hyam, hybm, ps are the usual CAM veriables by that
     name.  Order of dimensions must be (lev,lat,lon).
-    The optional argument level_src is an array or list of the new level_src to which
-    T should be interpolated.  Or it can be a cdms2 variable, in which case the
-    levels will be obtained from its 'lev' or 'plev' axis, if any.
     """
-
     # constants as in functions_vertical.ncl, lines 5-10:
+    plvlO = numpy.array([30., 50., 70., 100., 150., 200., 250., 300., 400., 500.,
+                         600., 700., 775., 850., 925., 1000.])  # in mb
+
     p0 = 1000.   # mb
     if T.getLevel() is None:
         return None
-    if level_src is None:
-        level_src = plvlO
-    elif isinstance(level_src, cdms2.avariable.AbstractVariable):
-        lev_axis = level_src.getLevel()
-        if lev_axis==None:
-            logger.warning("No level axis in %s",level_src.id)
-            return None
-        level_src = lev_axis[:]
+
     # Convert p0 to match ps.  Later, we'll convert back to mb.  This is faster than
     # converting ps to millibars.
     if ps.units=='mb':
@@ -450,14 +420,14 @@ def verticalize( T, hyam, hybm, ps, level_src=plvlO ):
     tmp = udunits(1.0,'mbar')
     s,i = tmp.how(ps.units)
     p0 = s*p0 + i
-    #psmb = cdms2.createVariable( pressures_in_mb( ps ), copy=True, units='mbar', id=ps.id )
     levels_orig = cdutil.vertical.reconstructPressureFromHybrid( ps, hyam, hybm, p0 )
-    # At this point levels_orig has the same units as ps.  Convert to to mbar
+
+    # At this point levels_orig has the same units as ps.  Convert to mbar
     tmp = udunits(1.0,ps.units)
     s,i = tmp.how('mbar')
     levels_orig = s*levels_orig + i
     levels_orig.units = 'mbar'
-    newT = cdutil.vertical.logLinearInterpolation( T, levels_orig, level_src )
+    newT = cdutil.vertical.logLinearInterpolation( T, levels_orig, plvlO )
     return newT
 
 def convert_variable( var, target_units ):
@@ -519,7 +489,7 @@ def get_data(var_file, varid, season):
                 var = f(varid)(squeeze=1)
                 vars.append(var)
             else:
-                var = process_derived_variable(f, varid)
+                var = acme.process_derived_var( varid, acme.derived_variables, f, None)
                 if var is not None:
                     vars.append(var)
                 else:
@@ -563,6 +533,15 @@ def print_table(rows):
             return format(num,"10.4e")
         else:
             return format(num,"10.3f")
+
+    undefined = -numpy.infty
+    name = 'Tables of Global, tropical, and extratropical DJF, JJA, ANN means and RMSE'
+    title = ' '.join(['AMWG Diagnostics Set 1', season, 'means', region]) + '\n'
+    subtitles = [
+        ' '.join(['Test Case:', model_file]) + '\n',
+        'Control Case: various observational data\n',
+        'Variable                 Test Case           Obs          Test-Obs           RMSE           Correlation\n']
+
     print title
     print ' '.join(subtitles)
     for row in rows:
@@ -579,6 +558,7 @@ def print_table(rows):
 def compute_row(spec):
     global hybrid, hyam, hybm, PS
 
+    #currently unused
     latmin, latmax, lonmin, lonmax = all_regions[region]
 
     varid = spec['var']
@@ -646,6 +626,13 @@ def compute_row(spec):
     return [rowname, metrics_dict['model_mean'], metrics_dict['obs_mean'],
             metrics_dict['model_mean'] - metrics_dict['obs_mean'],
             metrics_dict['rmse'], metrics_dict['corr']]
+
+#one reference to hybrid coordinates so they are read once
+first_model_data_read = True
+hybrid = False
+hyam = None
+hybm = None
+PS = None
 
 rows = []
 for spec in table_row_specs:
