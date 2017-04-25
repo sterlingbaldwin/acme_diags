@@ -2,9 +2,7 @@
 # DIAG Set 13 - Cloud Simulator Histograms
 
 import cdms2, MV2, cdutil.times, vcs, logging, sys, pdb
-from metrics.computation.reductions import *
-from metrics.packages.amwg.derivations.clouds import *
-from genutil import averager
+from cloud_tools import *
 from parameter import *
 
 logger = logging.getLogger(__name__)
@@ -269,16 +267,16 @@ exclude_axes=[ 'isccp_prs','isccp_tau','cosp_prs','cosp_tau',
                'modis_prs','modis_tau','cosp_tau_modis',
                'misr_cth','misr_tau','cosp_htmisr']
 
-data = get_data(obs_file, varid, season)#kludge for testing
-model = reduce_time_space_seasonal_regional( data,season=season,region=region,vid=None,
-                                             exclude_axes=exclude_axes)
-import numpy as np
-model += np.random.rand(7,6)
+data = get_data(model_file, varid, season)
+axes = data.getAxisList()
+axis_names = [a.id for a in axes if a.isLatitude() or a.isLongitude() or a.isLevel() and
+              a.id not in exclude_axes]
+axes_string = '(' + ')('.join(axis_names) + ')'
+model = cdutil.averager( data, axis=axes_string )
 model = standardize_and_check_cloud_variable(model)
 
 data = get_data(obs_file, varid, season)
-obs = reduce_time_space_seasonal_regional( data, season=season, region=region, vid=None,
-                                           exclude_axes=exclude_axes )
+obs = cdutil.averager( data, axis=axes_string )
 obs = standardize_and_check_cloud_variable(obs)
 
 cloud_data = {}
