@@ -13,8 +13,8 @@ import MV2
 from acme_diags.acme_viewer import create_viewer
 from acme_diags.acme_parser import ACMEParser
 from acme_diags.acme_parameter import ACMEParameter
-#from acme_diags.plotting.set5.plot import plot
-from acme_diags.plotting.set7.plot import plot
+from acme_diags.plotting.set5.plot import plot
+#from acme_diags.plotting.set7.plot import plot
 from acme_diags.derivations import acme
 from acme_diags.derivations.default_regions import regions_specs
 from acme_diags.metrics import rmse, corr, min_cdms, max_cdms, mean
@@ -199,7 +199,7 @@ for parameter in parameters:
                 filename2 = findfile(reference_data_path, ref_name, season)
                 print filename2
             except IOError:
-                print('No file found for {} and {}'.format(test_name, season))
+                print('No file found for {} and {}'.format(ref_name, season))
                 continue
 
         f_mod = cdms2.open(filename1)
