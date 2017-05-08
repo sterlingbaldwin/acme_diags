@@ -1,7 +1,7 @@
 import json, itertools, os, pdb
 def create(json_file, custom_dir):
-    """This function creates a json file for each variable ans season
-    in the file specified"""
+    """This function creates a json file for each variable, season, region
+    and plev in the file specified json file."""
 
     f=open(json_file).read()
     plotsets = json.loads(f)
@@ -42,6 +42,8 @@ if __name__ == '__main__':
     out = open(cmdfile, "w")
 
     #logger.info("List of commands is in: %s", cmdfile)
+    #module use / usr / common / contrib / acme / modulefiles
+    #module load uvcdat / batch
 
     dryrun = True
     sbatch_number = 1
@@ -50,13 +52,13 @@ if __name__ == '__main__':
             print >> out, "#!/bin/bash"
             print >> out, """#SBATCH -p debug
 #SBATCH -N %i
+#SBATCH -D $HOME/acme_slurm/logs/
 #SBATCH -t 00:30:00
 #SBATCH -J plotset
 #SBATCH -o set5_driver.o%%j
 
-module use /usr/common/contrib/acme/modulefiles
-module load uvcdat/batch
+source activate 2.8
 """ % (sbatch_number)
 
     for outfile in outfiles:
-        print >> out,'set5_driver.py -p parameter.py -d '+ outfile + ' &'
+        print >> out,'$HOME/acme-diags/acme_diags/plotset5/set5_driver.py -p parameter.py -d '+ outfile + ' &'
