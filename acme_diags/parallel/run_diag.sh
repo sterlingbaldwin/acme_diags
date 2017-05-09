@@ -7,4 +7,4 @@
 #SBATCH -o set5_driver.o%j
 
 source activate 2.8
-ps5_commands.sh
+$HOME/acme_slurm/ps5_commands.sh
