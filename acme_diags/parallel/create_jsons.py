@@ -38,7 +38,7 @@ if __name__ == '__main__':
     outdir = './jsons/'
     outfiles = create('custom.json', outdir)
 
-    cmdfile = os.path.join(outdir, "ps5_commands.sh")
+    cmdfile = "ps5_commands.sh"
     out = open(cmdfile, "w")
 
     #logger.info("List of commands is in: %s", cmdfile)
