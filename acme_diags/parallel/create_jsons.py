@@ -35,7 +35,7 @@ def create(json_file, custom_dir):
                 output_file_names += [outfile]
     return output_file_names
 if __name__ == '__main__':
-    outdir = './jsons/'
+    outdir = os.environ['HOME'] + '/acme_slurm/jsons/'
     outfiles = create('custom.json', outdir)
 
     cmdfile = "ps5_commands.sh"
