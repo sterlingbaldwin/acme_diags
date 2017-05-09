@@ -35,7 +35,7 @@ def create(json_file, custom_dir):
                 output_file_names += [outfile]
     return output_file_names
 if __name__ == '__main__':
-    outdir = './slurm_jsons/'
+    outdir = './jsons/'
     outfiles = create('custom.json', outdir)
 
     cmdfile = os.path.join(outdir, "ps5_commands.sh")
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     #module use / usr / common / contrib / acme / modulefiles
     #module load uvcdat / batch
 
-    dryrun = True
+    dryrun = False
     sbatch_number = 1
     if dryrun:
         if sbatch_number > 0:
@@ -61,4 +61,7 @@ source activate 2.8
 """ % (sbatch_number)
 
     for outfile in outfiles:
-        print >> out,'$HOME/acme-diags/acme_diags/plotset5/set5_driver.py -p parameter.py -d '+ outfile + ' &'
+        print >> out, \
+                 os.environ['HOME'] + '/acme-diags/acme_diags/plotset5/set5_driver.py ' + \
+                 '-p ' + os.environ['HOME'] + '/acme_slurm/parameter.py ' + \
+                 '-d '+ outfile
