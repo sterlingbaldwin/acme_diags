@@ -2,7 +2,8 @@
 #SBATCH -p debug
 #SBATCH -N 1
 #SBATCH -t 00:30:00
-
+echo $HOME
+ls $HOME
 #SBATCH -J plotset5
 #SBATCH -o $HOME/acme_slurm/logs/set5_driver.o%j
 
