@@ -5,7 +5,7 @@
 echo $HOME
 #SBATCH -D $HOME/acme_slurm/logs/
 #SBATCH -J plotset5
-#SBATCH --output=set5_driver.o%j
+#SBATCH -o set5_driver.o%j
 
 source activate 2.8
 $HOME/acme_slurm/ps5_commands.sh
